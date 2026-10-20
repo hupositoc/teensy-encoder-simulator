@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title description">
+<title id="title">Teensy Encoder Simulator overview</title>
+<desc id="description">Generate repeatable A/B phase-shifted pulses and a reference pulse for checking periodic operating-status signal inputs in the marine module test workflow. Flow: RPM / pulse settings; Timing calculation; GPIO state machine; External output stage</desc>
+<rect width="1280" height="420" rx="24" fill="#ffffff"/>
+<g font-family="sans-serif">
+<text font-family="Arial" x="48" y="54" font-size="20" font-weight="700" fill="#1b64da">EMBEDDED TEST SUPPORT</text>
+<text font-family="Arial" x="48" y="112" font-size="44" font-weight="700" fill="#191f28">Teensy Encoder Simulator</text>
+<text font-family="Arial" x="48" y="156" font-size="24" fill="#4e5968">A controlled pulse source for operating-status input checks</text>
+<rect x="48" y="202" width="1184" height="154" rx="16" fill="#f2f4f6"/>
+<text font-family="Arial" x="72" y="238" font-size="18" font-weight="700" fill="#1b64da">PURPOSE</text>
+<text font-family="Arial" x="72" y="276" font-size="24" fill="#191f28">Generate repeatable A/B phase-shifted pulses and a reference pulse for checking</text>
+<text font-family="Arial" x="72" y="306" font-size="24" fill="#191f28">periodic operating-status signal inputs in the marine module test workflow.</text>
+<text font-family="Arial" x="48" y="396" font-size="18" fill="#4e5968">Engineering overview · purpose, implementation and evidence</text>
+</g></svg>

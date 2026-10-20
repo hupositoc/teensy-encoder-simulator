@@ -1,33 +1,150 @@
-# Teensy Encoder Simulator | 엔코더 모사 펄스 발생기
+<a id="readme-top"></a>
 
-회전 센서의 A/B 위상차와 기준 펄스를 모사하여 입력 장치 시험에 사용할 수 있도록 만든 Teensy 스케치다.
+![Teensy Encoder Simulator: A controlled pulse source for operating-status input checks](docs/assets/overview.svg)
 
-## 기술과 구성
+# Teensy Encoder Simulator
 
-Arduino C++ · Teensy · GPIO · 타이밍 제어
+**A controlled pulse source for operating-status input checks.**
+
+Generate repeatable A/B phase-shifted pulses and a reference pulse for checking periodic operating-status signal inputs in the marine module test workflow.
+
+| At a glance | |
+|---|---|
+| Context | Embedded Test Support |
+| Current evidence | Source inspected; physical waveform and board target not verified here |
+| Stack | Arduino C++, Teensy, GPIO scheduling, external N-MOSFET switching |
+| Author | [hupositoc](https://github.com/hupositoc) |
+
+[Case study](docs/case-study.md) · [Architecture](docs/architecture.md) · [Validation](docs/validation.md) · [Design rationale](docs/design-rationale.md)
+
+## Table of Contents
+
+- [About The Project](#about-the-project)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+- [Acknowledgments](#acknowledgments)
+
+## About The Project
+
+### Why I built it
+
+The author used Teensy-related signal tooling for normal-operation signal checks during marine Type Approval activities. The code is a bench support sketch, not a class-approved signal generator.
+
+A signal-analysis workflow needs a known input to distinguish a problem in the device, the wiring or the interpretation. A small configurable pulse source makes it possible to exercise the measurement path without depending on a mechanical sensor for every check.
+
+### What I implemented
+
+Derive revolution and pulse timing from RPM and pulses per revolution. Generate two outputs separated by a quarter period and a periodic REF output. Account explicitly for the inverted GPIO logic of an external N-MOSFET low-side switching stage.
+
+### What this made possible
+
+- Provide nominal A/B/reference behavior for bench checks of the signal path.
+- Change RPM and pulse count in a small, inspectable sketch.
+- Explain output timing and electrical inversion alongside the software logic.
+
+### What happened in practice
+
+The source provides the pulse-generation configuration used as test support. The author associates this tool family with normal-operation checks. Oscilloscope traces, timing uncertainty and a board-specific build result are not available in this public package.
+
+### Built With
+
+Arduino C++, Teensy, GPIO scheduling, external N-MOSFET switching. Dependencies provide integration capabilities; the source links below identify the project-specific behavior.
+
+### Engineering decisions
+
+### Calculate timing from a small parameter set
+
+At 60 RPM, one revolution is 1 s; 212 pulses imply about 4.717 ms per pulse. The sketch uses integer microseconds, so nominal arithmetic is not a timing calibration.
+
+### Make inversion explicit
+
+GPIO HIGH turns the low-side MOSFET on, which pulls the external output low. Naming the desired output level helps avoid an inverted test signal.
+
+### Separate software from electrical validation
+
+A sketch cannot establish voltage range, isolation or signal integrity. Those require the actual circuit and measured waveforms.
+
+### Code to inspect
+
+| Source entry point | Responsibility |
+|---|---|
+| [`RPM`](encoder_simulator/encoder_simulator.ino#L20) | Nominal 60 revolutions per minute. |
+| [`PULSES_PER_REV`](encoder_simulator/encoder_simulator.ino#L21) | Nominal 212 pulses per revolution. |
+| [`B_OFFSET_US`](encoder_simulator/encoder_simulator.ino#L34) | Quarter-period offset for B relative to A. |
+| [`writeOutput`](encoder_simulator/encoder_simulator.ino#L48) | Maps desired external level to inverted GPIO logic. |
+| [`loop`](encoder_simulator/encoder_simulator.ino#L68) | Schedules pulse states from elapsed microseconds. |
+
+### AI-assisted engineering
+
+I use AI development tools to turn concrete needs into working software. My engineering responsibilities include defining the problem, interpreting the operating constraints, reviewing behavior, investigating failures and checking results. AI assistance is a development method; it is not evidence that a feature works. File-by-file AI authorship or a specific assistant/model is not claimed without the corresponding development record.
+
+## Getting Started
+
+### Prerequisites
+
+The appropriate Teensy board package, Arduino-compatible tooling, the actual board, and the reviewed external output circuit.
+
+### Installation
 
 ```text
-encoder_simulator/encoder_simulator.ino: RPM·펄스 수·위상·기준 펄스 설정
+git clone https://github.com/hupositoc/teensy-encoder-simulator.git
+cd teensy-encoder-simulator
 ```
 
-## 엔지니어링 관점
+Then follow the project-specific path:
 
-회전수에서 주기 계산, A/B 1/4주기 위상차, N-MOSFET 저측 스위칭에 따른 GPIO 논리 반전.
+```text
+Open encoder_simulator/encoder_simulator.ino in Arduino IDE.
+Select the actual Teensy board and review the pin/circuit mapping before upload.
+```
 
-## AI를 활용한 개발 방식
+The commands describe the intended setup. See the validation record for which parts were actually executed in the current environment.
 
-이 프로젝트는 AI 개발 도구를 활용한 문제 해결 포트폴리오의 일부다. AI가 코드를 작성했다는 사실보다 문제 정의, 기술 선택, 결과 검토, 실패 원인 분석과 검증 근거를 중심으로 설명한다. 원본 개발 대화 전체는 확인하지 못했으므로 파일별 수작업·AI 작성 비율이나 사용 모델은 추정하지 않는다.
+## Usage
 
-## 시작하기
+![Four-stage workflow for Teensy Encoder Simulator](docs/assets/workflow.svg)
 
-Arduino IDE에서 `encoder_simulator/encoder_simulator.ino`를 열고 실제 Teensy 보드에 맞는 보드 패키지와 타깃을 선택한다. GPIO 2/5/8과 외부 MOSFET 회로 구성을 먼저 확인한다. 보드 모델이 원본에 명시되지 않아 특정 보드의 컴파일 성공을 주장하지 않는다.
+**Text equivalent:** RPM / pulse settings → Timing calculation → GPIO state machine → External output stage.
 
-## 실행과 현재 상태
+Start by defining the intended input and expected behavior. Save the configuration with the experiment or test session so that an output can be interpreted later. Review exceptions and raw evidence before treating a summary as a final conclusion.
 
-기본 60 RPM·212 pulse/rev, REF 4ms 설정이다. 12V 출력은 외부 회로를 전제로 하며 GPIO에 12V를 직접 연결하지 않는다. 회로도·측정 파형·실제 보드 검증은 이번 묶음에 없다.
+Parameter calculations and logic inversion were inspected from source. Board compilation, electrical levels and oscilloscope timing measurements have not been reproduced.
 
-이번 공개 준비에서는 원본의 선별 복사와 정적 점검을 수행했다. 지원 도구·장비가 없는 환경에서 실행 성공, 운영 성과, 모델 정확도를 새로 확인한 것으로 주장하지 않는다. 상세 검증 결과는 `VALIDATION.md`에 기록한다.
+### Boundaries and known limitations
 
-## 출처·공개 범위
+- The exact Teensy board model is not specified in the archived sketch.
+- Nominal values are not measured frequency, jitter or phase-accuracy results.
+- The 12 V external-output concept requires the intended interface circuit; never connect 12 V directly to a Teensy GPIO.
 
-원본 작업 폴더에서 소스를 선별한 공개 준비본이다. 로그·자격증명·로컬 SDK 경로·실제 업무 데이터·실행 바이너리는 제외했다. 기존 저작권 고지와 제3자 라이선스는 유지한다. 원본 파일의 고지와 의존성 이용 조건이 적용되며, 이 저장소의 문서가 새 라이선스를 부여하지 않는다.
+Read the [case study](docs/case-study.md) for the purpose and enabled workflow, and [architecture](docs/architecture.md) for the source-level explanation. The [validation document](docs/validation.md) separates verified checks, author-reported use and pending integration work.
+
+## Roadmap
+
+- [ ] Identify and pin the original board target.
+- [ ] Publish a neutral schematic with component ratings and pin mapping.
+- [ ] Measure frequency, duty cycle, A/B phase and REF width against the nominal settings.
+
+These are planned tasks, not completed capabilities.
+
+## Contributing
+
+Use an issue to describe a reproducible problem, expected behavior, actual behavior and the environment. For a change, keep the scope focused and attach the relevant test or recording. Do not submit private customer data, identifying test captures, credentials or confidential certification documents.
+
+## License
+
+Existing file-level notices and third-party licenses remain in force. A repository-wide open-source license has not been selected for all archived material. Public visibility does not grant rights beyond those existing terms. Documentation structure attribution does not relicense the software.
+
+## Contact
+
+[hupositoc on GitHub](https://github.com/hupositoc) · [Project issues](https://github.com/hupositoc/teensy-encoder-simulator/issues)
+
+## Acknowledgments
+
+The top-level section order follows [Best-README-Template](https://github.com/othneildrew/Best-README-Template), reviewed under its [Unlicense](https://github.com/othneildrew/Best-README-Template/blob/main/LICENSE.txt). All project narratives are written for this implementation. Visual guidance is attributed in [design rationale](docs/design-rationale.md). The broader 50-repository documentation review informs the reading order, source links and evidence presentation; it does not imply endorsement by those projects.
+
+
+[Engineering decision record](docs/engineering-decisions.md) · [Review of 50 reference repositories](docs/reference-review-50.md)
